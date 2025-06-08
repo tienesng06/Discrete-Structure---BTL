@@ -1,19 +1,5 @@
 #include "tsm.h"
 
-string convertToLabel(int index) {
-    string label;
-    if (index < 26) {
-        // A-Z
-        label = string(1, 'A' + index);
-    } else if (index < 26 * 2) {
-        // AA-AZ
-        label = "A" + string(1, 'A' + (index - 26));
-    } else {
-        // For larger numbers: A1, A2, A3, etc.
-        label = "A" + to_string(index - 26);
-    }
-    return label;
-}
 
 void Traveling(const vector<vector<int>>& graph, int numEdges, char startVertex) {
     int n = graph.size();  // number of vertices
