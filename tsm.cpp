@@ -1,5 +1,7 @@
 #include "tsm.h"
 
+#define INF 1000000000
+
 string Traveling(int edgeList[][3], int numEdge, char startChar) {
     vector<char> int_to_char_vec;
     for (int i = 0; i < numEdge; ++i) {
