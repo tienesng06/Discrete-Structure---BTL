@@ -1,56 +1,77 @@
  #include "bellman.h"
 
-void BF(int edge[MAX][3], int numberOfEdges, char start_Ver, int value_arr[], int prev_arr[]) {
-    vector<char> vertices;
-    for (int i = 0; i < numberOfEdges; i++) {
+
+void BF(int edge[][3], int numEdges, char start, int value[], int prev[])
+{
+    vector<int> vertices;
+    for (int i = 0; i < numEdges; ++i) {
         vertices.push_back(edge[i][0]);
         vertices.push_back(edge[i][1]);
     }
     sort(vertices.begin(), vertices.end());
     vertices.erase(unique(vertices.begin(), vertices.end()), vertices.end());
-    
-    int num_vertices = vertices.size();
-    int start = lower_bound(vertices.begin(), vertices.end(), start_Ver) - vertices.begin();
-    
-    bool needInit = false;
-    for (int i = 0; i < num_vertices; i++) {
-        if (value_arr[i] == -1) {
-            needInit = true;
-            break;
-        }
+
+    static int V = vertices.size();
+    vector<vector<int>> G(V, vector<int>(V, -1));
+
+    const int MAX_VERTEX = 128;
+    int vertexToIndex[MAX_VERTEX];
+    fill(vertexToIndex, vertexToIndex + MAX_VERTEX, -1);
+    int indexToVertex[V];
+
+    for (int i = 0; i < V; ++i) {
+        vertexToIndex[vertices[i]] = i;
+        indexToVertex[i] = vertices[i];
     }
-    
-    if (needInit) {
-        for (int i = 0; i < num_vertices; i++) {
-            value_arr[i] = -1;
-            prev_arr[i] = -1;
+
+    for (int i = 0; i < numEdges; ++i) {
+        int u = vertexToIndex[edge[i][0]];
+        int v = vertexToIndex[edge[i][1]];
+        G[u][v] = edge[i][2];
+    }
+
+    int startVertex = static_cast<int>(start);
+    int startIdx = vertexToIndex[startVertex];
+
+    if (startIdx < 0 || startIdx >= V) {
+        for (int i = 0; i < V; i++) {
+            prev[i] = -1;
         }
-        
-        value_arr[start] = 0;
-        
-        for (int i = 0; i < numberOfEdges; i++) {
-            int u = lower_bound(vertices.begin(), vertices.end(), edge[i][0]) - vertices.begin();
-            int v = lower_bound(vertices.begin(), vertices.end(), edge[i][1]) - vertices.begin();
-            if (u == start && v != start) {
-                value_arr[v] = edge[i][2];
-                prev_arr[v] = start;
+        return;
+    }
+
+    static bool initialized[MAX_VERTEX] = { false };
+
+    if (!initialized[startVertex]) {
+        value[startIdx] = 0;
+        for (int i = 0; i < V; i++) {
+            if (G[startIdx][i] != -1) {
+                value[i] = G[startIdx][i];
+                prev[i] = startIdx;
+            } else {
+                prev[i] = -1;
             }
         }
-    } else {
-        vector<int> old_value(value_arr, value_arr + num_vertices);
-        
-        for (int u = 0; u < num_vertices; u++) {
-            if (old_value[u] != -1) {
-                for (int i = 0; i < numberOfEdges; i++) {
-                    int src = lower_bound(vertices.begin(), vertices.end(), edge[i][0]) - vertices.begin();
-                    int dest = lower_bound(vertices.begin(), vertices.end(), edge[i][1]) - vertices.begin();
-                    if (src == u) {
-                        int new_dist = old_value[u] + edge[i][2];
-                        if (value_arr[dest] == -1 || new_dist < value_arr[dest] ||
-                           (new_dist == value_arr[dest] && u < prev_arr[dest])) {
-                            value_arr[dest] = new_dist;
-                            prev_arr[dest] = u;
-                        }
+        initialized[startVertex] = true;
+        return;
+    }
+
+    int tempValue[V];
+    int tempPrev[V];
+    for (int i = 0; i < V; i++) {
+        tempValue[i] = value[i];
+        tempPrev[i] = prev[i];
+    }
+
+    for (int u = 0; u < V; u++) {
+        if (tempValue[u] == -1) continue;
+        for (int v = 0; v < V; v++) {
+            if (G[u][v] != -1) {
+                int dis = tempValue[u] + G[u][v];
+                if (tempValue[v] == -1 || dis < tempValue[v]) {
+                    if (value[v] == -1 || dis < value[v]) {
+                        value[v] = dis;
+                        prev[v] = u;
                     }
                 }
             }
@@ -58,55 +79,62 @@ void BF(int edge[MAX][3], int numberOfEdges, char start_Ver, int value_arr[], in
     }
 }
 
-string BF_Path(int edge[MAX][3], int numberOfEdges, char startVertex, char goalVertex) {
-    // Extract and sort all unique vertices from the edge list
-    vector<char> vertices;
-    for (int i = 0; i < numberOfEdges; i++) {
+
+string BF_Path(int edge[][3], int numberOfEdges, char startVertex, char goalVertex) {
+    vector<int> vertices;
+    for (int i = 0; i < numberOfEdges; ++i) {
         vertices.push_back(edge[i][0]);
         vertices.push_back(edge[i][1]);
     }
     sort(vertices.begin(), vertices.end());
     vertices.erase(unique(vertices.begin(), vertices.end()), vertices.end());
-    
-    int num_vertices = vertices.size();
-    
-    // Create mapping functions
-    auto getIndex = [&](char c) -> int {
-        return lower_bound(vertices.begin(), vertices.end(), c) - vertices.begin();
-    };
-    auto getChar = [&](int i) -> char {
-        return vertices[i];
-    };
-    
-    int value_arr[20];
-    int prev_arr[20];
-    for (int i = 0; i < num_vertices; i++) {
-        value_arr[i] = -1;
-        prev_arr[i] = -1;
+
+    int V = vertices.size();
+
+    const int MAX_VERTEX = 128;
+    int vertexToIndex[MAX_VERTEX];
+    int indexToVertex[MAX_VERTEX];
+    for (int i = 0; i < MAX_VERTEX; ++i) vertexToIndex[i] = -1;
+
+    for (int i = 0; i < V; ++i) {
+        vertexToIndex[vertices[i]] = i;
+        indexToVertex[i] = vertices[i];
     }
 
-    // Run Bellman-Ford algorithm (n-1 iterations)
-    for (int i = 0; i < num_vertices - 1; i++) {
-        BF(edge, numberOfEdges, startVertex, value_arr, prev_arr);
+    int value[128];
+    int prev[128];
+    for (int i = 0; i < 128; ++i) {
+        value[i] = -1;
+        prev[i] = -1;
     }
 
-    int goal = getIndex(goalVertex);
-    if (value_arr[goal] == -1) return "NO PATH";
+    int startIdx = vertexToIndex[(int)startVertex];
+    if (startIdx == -1) return "No path exists";
+    value[startIdx] = 0;
+
+    for (int i = 0; i < V - 1; ++i) {
+        BF(edge, numberOfEdges, startVertex, value, prev);
+    }
+
+    int goalIdx = vertexToIndex[(int)goalVertex];
+    if (goalIdx == -1 || value[goalIdx] == -1) {
+        return "No path exists";
+    }
 
     vector<char> path;
-    int current = goal;
+    int current = goalIdx;
     while (current != -1) {
-        path.push_back(getChar(current));
-        current = prev_arr[current];
+        path.push_back((char)indexToVertex[current]);
+        current = prev[current];
     }
-    
+
     reverse(path.begin(), path.end());
-    
-    string result = "";
-    for (int i = 0; i < path.size(); i++) {
+
+    string result;
+    for (size_t i = 0; i < path.size(); ++i) {
         if (i > 0) result += " ";
         result += path[i];
     }
-    
+
     return result;
 }
