@@ -10,7 +10,6 @@
 #include <random>
 using namespace std;
 #define MAX 1000
-#define INF 1000000000
 
 using namespace std;
 
