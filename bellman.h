@@ -1,8 +1,7 @@
 #include "main.h"
 
 
-void BF(int edge[MAX][3], int numberOfEdges, char start_Ver, int value_arr[], int prev_arr[]);
+void BF(int edge[][3], int numEdges, char start, int value[], int prev[]);
 
 
-
-string BF_Path(int edge[MAX][3], int numberOfEdges, char startVertex, char goalVertex);
+string BF_Path(int edge[][3], int numberOfEdges, char startVertex, char goalVertex);
